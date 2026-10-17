@@ -20,11 +20,22 @@ const SIZE_CHART = [
  * EDIT THE VALUES BELOW to match the real product.
  */
 export const QUICK_PRODUCT = {
-  sku: "PT-TEE-001",
-  name: "Custom Printed Tee",
-  tagline: "Premium cotton tee, printed in Bengaluru",
+  sku: "PT-POLO-RAJYOTSAVA-001",
+  name: "Kannada Rajyotsava Polo",
+  /** Small line above the product name */
+  eyebrow: "ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವ ವಿಶೇಷ · Rajyotsava Special",
+  tagline: "ಹೆಮ್ಮೆಯ ಕನ್ನಡಿಗ. Wear your pride. Celebrate Karnataka.",
   description:
-    "180 GSM combed cotton, soft hand-feel, colour-fast print. Pick your size and colour and we'll take it from there.",
+    "Some things you wear. Some things you carry in your heart. This black polo carries both: the map of Karnataka and the words ಹೆಮ್ಮೆಯ ಕನ್ನಡಿಗ, finely embroidered over your heart in the colours of the Kannada flag. Made for Kannadigas, for Rajyotsava and every day you want to say where you come from.",
+  /** Four short selling points shown under the description */
+  highlights: [
+    "Premium quality",
+    "Comfort fit",
+    "Fine embroidery",
+    "Made for Kannadigas",
+  ],
+  /** Closing line at the bottom of the product page */
+  closing: "Rooted in tradition. Worn with pride.",
   /** paise per piece, GST included */
   price: 59900,
   gstRate: 5,

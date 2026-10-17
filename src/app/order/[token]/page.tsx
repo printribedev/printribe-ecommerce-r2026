@@ -79,7 +79,8 @@ export default async function OrderStatusPage({ params }: { params: { token: str
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-tribe text-2xl text-white">
             ✓
           </div>
-          <h1 className="mt-3 text-xl font-bold">
+          <p className="mt-3 text-sm font-semibold text-gold-dark">ಧನ್ಯವಾದಗಳು · Thank you</p>
+          <h1 className="mt-1 text-xl font-bold">
             {awaiting ? "Payment submitted" : order.status === "CANCELLED" ? "Order cancelled" : "Order confirmed"}
           </h1>
           <p className="mt-1 text-sm text-neutral-600">

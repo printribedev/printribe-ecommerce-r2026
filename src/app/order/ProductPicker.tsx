@@ -7,17 +7,32 @@ import { shippingFee, unitPrice } from "@/lib/pricing";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
 import { SizeChart } from "./SizeChart";
 
-/** Simple tee silhouette tinted with the chosen colour, used until a real product photo is set. */
-function TeeVisual({ hex }: { hex: string }) {
+/**
+ * Polo illustration (collar, placket, embroidered Karnataka-flag emblem on the left chest),
+ * tinted with the chosen colour. Shown until a real product photo is set in quick-product.ts.
+ */
+function PoloVisual({ hex }: { hex: string }) {
   return (
     <svg viewBox="0 0 200 200" className="mx-auto h-full w-full max-w-sm" role="img" aria-label={P.name}>
+      {/* body and sleeves */}
       <path
-        d="M70 22 L18 52 L40 88 L60 75 L60 182 L140 182 L140 75 L160 88 L182 52 L130 22 Q100 44 70 22 Z"
+        d="M72 24 L16 54 L38 92 L60 78 L60 184 L140 184 L140 78 L162 92 L184 54 L128 24 Z"
         fill={hex}
-        stroke="rgba(0,0,0,0.18)"
+        stroke="rgba(255,255,255,0.25)"
         strokeWidth="2"
         strokeLinejoin="round"
       />
+      {/* collar */}
+      <path d="M72 24 L88 22 L100 44 L112 22 L128 24 L118 50 L100 58 L82 50 Z" fill={hex} stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinejoin="round" />
+      {/* placket and buttons */}
+      <line x1="100" y1="44" x2="100" y2="82" stroke="rgba(255,255,255,0.35)" strokeWidth="2" />
+      <circle cx="96" cy="64" r="1.8" fill="rgba(255,255,255,0.55)" />
+      <circle cx="96" cy="74" r="1.8" fill="rgba(255,255,255,0.55)" />
+      {/* embroidered emblem, left chest */}
+      <g transform="translate(118 78)">
+        <rect x="0" y="0" width="16" height="5" rx="1" fill="#F2B705" />
+        <rect x="0" y="5" width="16" height="5" rx="1" fill="#EE3C30" />
+      </g>
     </svg>
   );
 }
@@ -40,7 +55,7 @@ export function ProductPicker() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={P.image} alt={P.name} className="h-full w-full object-cover" />
         ) : (
-          <TeeVisual hex={hex} />
+          <PoloVisual hex={hex} />
         )}
       </div>
 

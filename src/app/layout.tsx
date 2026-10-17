@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_Kannada } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Kannada script isn't in Inter, so text like ಹೆಮ್ಮೆಯ ಕನ್ನಡಿಗ falls through to this font.
+const kannada = Noto_Sans_Kannada({ subsets: ["kannada"], variable: "--font-kannada" });
 
 export const metadata: Metadata = {
   title: "Printribe",
@@ -20,7 +22,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>{children}</body>
+      <body className={`${inter.variable} ${kannada.variable} font-sans antialiased`}>{children}</body>
     </html>
   );
 }
