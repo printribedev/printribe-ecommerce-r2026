@@ -9,24 +9,25 @@ import { INDIAN_STATES } from "@/lib/india";
 import { shippingFee, unitPrice } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { normalizePhone, validateDetails } from "@/lib/validation";
+import { checkEmailDomain, checkPincode } from "@/lib/verify";
 
-export type OrderFormState = { error?: string };
+/** `field` names the input to highlight, so the form can point at the problem. */
+export type OrderFormState = { error?: string; field?: string };
 
 const Schema = z.object({
   size: z.string().refine((s) => P.sizes.includes(s), "Choose a size"),
   colour: z.string().refine((c) => P.colours.some((x) => x.name === c), "Choose a colour"),
   qty: z.coerce.number().int().min(P.moq, `Minimum order is ${P.moq}`).max(P.maxQty),
-  name: z.string().trim().min(2, "Enter your name").max(80),
-  email: z.string().trim().toLowerCase().email("Enter a valid email"),
-  phone: z
-    .string()
-    .transform((v) => v.replace(/[\s-]/g, "").replace(/^(\+91|91|0)(?=\d{10}$)/, ""))
-    .refine((v) => /^[6-9]\d{9}$/.test(v), "Enter a 10-digit mobile number"),
-  line1: z.string().trim().min(3, "Enter your address").max(150),
+  // Content rules (no dummy entries) are applied by validateDetails() below.
+  name: z.string().trim().max(80).transform((v) => v.replace(/\s+/g, " ")),
+  email: z.string().trim().toLowerCase().max(120),
+  phone: z.string().max(20).transform(normalizePhone),
+  line1: z.string().trim().max(150).transform((v) => v.replace(/\s+/g, " ")),
   line2: z.string().trim().max(150).optional(),
-  city: z.string().trim().min(2, "Enter your city").max(60),
+  city: z.string().trim().max(60).transform((v) => v.replace(/\s+/g, " ")),
   state: z.string().refine((s) => (INDIAN_STATES as readonly string[]).includes(s), "Choose your state"),
-  pincode: z.string().trim().regex(/^\d{6}$/, "Enter a 6-digit pincode"),
+  pincode: z.string().trim().max(6),
 });
 
 /** PTW-XXXXXX, avoiding look-alike characters so it's easy to read out over a call. */
@@ -37,8 +38,21 @@ function orderNumber() {
 
 export async function placeOrder(_prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
   const parsed = Schema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { error: issue.message, field: String(issue.path[0] ?? "") };
+  }
   const d = parsed.data;
+
+  // 1. Content rules: no dummy or gibberish entries (same rules the form shows live).
+  const problems = validateDetails(d);
+  const firstBad = (Object.keys(problems) as (keyof typeof problems)[])[0];
+  if (firstBad) return { error: problems[firstBad], field: firstBad };
+
+  // 2. Real-world checks: does the email's domain exist, and does the pincode match the state?
+  const [emailProblem, pinProblem] = await Promise.all([checkEmailDomain(d.email), checkPincode(d.pincode, d.state)]);
+  if (emailProblem) return { error: emailProblem, field: "email" };
+  if (pinProblem) return { error: pinProblem, field: "pincode" };
 
   // The price is always recomputed here; the browser's number is never used.
   const unit = unitPrice({ basePrice: P.price, tiers: P.tiers, qty: d.qty });

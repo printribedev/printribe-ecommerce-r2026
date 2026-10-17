@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatINR } from "@/lib/money";
@@ -31,7 +32,9 @@ export default function DetailsPage({
       <Stepper current={2} />
 
       <section className="mb-6 flex items-center gap-4 rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="h-12 w-12 shrink-0 rounded-lg border" style={{ background: hex }} />
+        <div className="relative h-16 w-[3.2rem] shrink-0 overflow-hidden rounded-lg border" style={{ background: hex }}>
+          {P.images[0] && <Image src={P.images[0].src} alt="" fill sizes="52px" className="object-cover" />}
+        </div>
         <div className="min-w-0 flex-1 text-sm">
           <p className="font-medium">{P.name}</p>
           <p className="text-neutral-600">

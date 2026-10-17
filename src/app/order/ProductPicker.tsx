@@ -5,6 +5,7 @@ import { useState } from "react";
 import { formatINR } from "@/lib/money";
 import { shippingFee, unitPrice } from "@/lib/pricing";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { ProductGallery } from "./ProductGallery";
 import { SizeChart } from "./SizeChart";
 
 /**
@@ -50,14 +51,13 @@ export function ProductPicker() {
 
   return (
     <div className="space-y-6">
-      <div className="aspect-square overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6">
-        {P.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={P.image} alt={P.name} className="h-full w-full object-cover" />
-        ) : (
+      {P.images.length > 0 ? (
+        <ProductGallery />
+      ) : (
+        <div className="aspect-square overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6">
           <PoloVisual hex={hex} />
-        )}
-      </div>
+        </div>
+      )}
 
       {P.colours.length > 1 ? (
         <div>
