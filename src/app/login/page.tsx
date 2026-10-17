@@ -1,92 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
   const params = useSearchParams();
-  const next = params.get("next") ?? "/account";
+  const next = params.get("next");
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">(
-    params.get("error") ? "error" : "idle"
-  );
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState(params.get("error") ? "Sign-in failed. Please try again." : "");
 
-  const [problem, setProblem] = useState("");
-
-  async function sendLink(e: React.FormEvent) {
+  async function signIn(e: React.FormEvent) {
     e.preventDefault();
-    setState("sending");
+    setBusy(true);
     setProblem("");
-    const { error } = await createClient().auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
+    const { error } = await createClient().auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
-      // Say what actually went wrong instead of a vague message.
-      const rateLimited = error.status === 429 || /rate limit/i.test(error.message);
       setProblem(
-        rateLimited
-          ? "Too many sign-in emails were requested. Please wait a few minutes, then try again."
+        error.status === 400 || /invalid login/i.test(error.message)
+          ? "Incorrect email or password."
           : error.message
       );
+      setBusy(false);
+      return;
     }
-    setState(error ? "error" : "sent");
+    // A full page load makes sure the new session cookie is sent; /auth/continue picks the right page.
+    window.location.assign(`/auth/continue${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   }
 
-  async function google() {
-    await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
-  }
+  const field =
+    "rounded-lg border border-neutral-300 bg-white px-3 py-3 text-base outline-none focus:border-tribe";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-4">
       <div>
         <h1 className="text-2xl font-semibold">Sign in to Printribe</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Track orders and reuse your saved designs.
-        </p>
+        <p className="mt-1 text-sm text-neutral-600">Enter your email and password.</p>
       </div>
 
-      {state === "sent" ? (
-        <p className="rounded-lg bg-tribe-light p-4 text-sm">
-          Check <b>{email}</b> for your sign-in link.
-        </p>
-      ) : (
-        <form onSubmit={sendLink} className="flex flex-col gap-3">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-3 text-base outline-none focus:border-tribe"
-          />
-          <button
-            disabled={state === "sending"}
-            className="rounded-lg bg-tribe px-3 py-3 font-medium text-white hover:bg-tribe-dark disabled:opacity-60"
-          >
-            {state === "sending" ? "Sending…" : "Email me a sign-in link"}
-          </button>
-          {state === "error" && (
-            <p className="text-sm text-tribe-dark">{problem || "Something went wrong. Please try again."}</p>
-          )}
-        </form>
-      )}
-
-      <button
-        onClick={google}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-3 font-medium hover:bg-neutral-50"
-      >
-        Continue with Google
-      </button>
+      <form onSubmit={signIn} className="flex flex-col gap-3">
+        <input
+          type="email"
+          required
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className={field}
+        />
+        <input
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          className={field}
+        />
+        <button
+          disabled={busy}
+          className="rounded-lg bg-tribe px-3 py-3 font-medium text-white hover:bg-tribe-dark disabled:opacity-60"
+        >
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
+        {problem && (
+          <p role="alert" className="text-sm text-tribe-dark">
+            {problem}
+          </p>
+        )}
+      </form>
     </main>
   );
 }
