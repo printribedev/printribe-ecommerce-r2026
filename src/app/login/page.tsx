@@ -13,15 +13,27 @@ function LoginForm() {
     params.get("error") ? "error" : "idle"
   );
 
+  const [problem, setProblem] = useState("");
+
   async function sendLink(e: React.FormEvent) {
     e.preventDefault();
     setState("sending");
+    setProblem("");
     const { error } = await createClient().auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
+    if (error) {
+      // Say what actually went wrong instead of a vague message.
+      const rateLimited = error.status === 429 || /rate limit/i.test(error.message);
+      setProblem(
+        rateLimited
+          ? "Too many sign-in emails were requested. Please wait a few minutes, then try again."
+          : error.message
+      );
+    }
     setState(error ? "error" : "sent");
   }
 
@@ -64,7 +76,7 @@ function LoginForm() {
             {state === "sending" ? "Sending…" : "Email me a sign-in link"}
           </button>
           {state === "error" && (
-            <p className="text-sm text-tribe-dark">Something went wrong. Please try again.</p>
+            <p className="text-sm text-tribe-dark">{problem || "Something went wrong. Please try again."}</p>
           )}
         </form>
       )}
