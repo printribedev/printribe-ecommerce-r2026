@@ -1,0 +1,49 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { formatINR } from "@/lib/money";
+import { unitPrice } from "@/lib/pricing";
+import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { DetailsForm } from "../DetailsForm";
+import { parseSelection } from "../selection";
+import { Stepper } from "../Stepper";
+
+export const metadata: Metadata = { title: "Your details · Printribe", robots: { index: false } };
+
+export default function DetailsPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const selection = parseSelection(searchParams);
+  if (!selection) redirect("/order");
+
+  const unit = unitPrice({ basePrice: P.price, tiers: P.tiers, qty: selection.qty });
+  const total = formatINR(unit * selection.qty);
+  const hex = P.colours.find((c) => c.name === selection.colour)?.hex ?? "#fff";
+
+  return (
+    <main className="mx-auto max-w-xl px-4 pb-16 pt-6">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/printribe-logo.png" alt="Printribe" className="mb-5 h-8 w-auto" />
+      <Stepper current={2} />
+
+      <section className="mb-6 flex items-center gap-4 rounded-xl border border-neutral-200 bg-white p-4">
+        <div className="h-12 w-12 shrink-0 rounded-lg border" style={{ background: hex }} />
+        <div className="min-w-0 flex-1 text-sm">
+          <p className="font-medium">{P.name}</p>
+          <p className="text-neutral-600">
+            {selection.colour} · {selection.size} · {selection.qty} × {formatINR(unit)}
+          </p>
+          <Link href="/order" className="text-xs text-tribe underline">
+            Change
+          </Link>
+        </div>
+        <p className="font-semibold">{total}</p>
+      </section>
+
+      <h1 className="mb-3 text-xl font-bold">Delivery details</h1>
+      <DetailsForm selection={selection} total={total} />
+    </main>
+  );
+}

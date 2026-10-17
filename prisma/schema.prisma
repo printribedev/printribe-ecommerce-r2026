@@ -314,6 +314,8 @@ model Order {
   trackingUrl   String?     @map("tracking_url")
   /// Manual UPI payment: customer's screenshot (private R2 key), checked by staff
   paymentProofKey String?   @map("payment_proof_key")
+  /// UPI transaction / UTR number typed by the customer after paying
+  paymentRef    String?     @map("payment_ref")
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 

@@ -98,3 +98,23 @@ export async function attachProof(token: string, key: string) {
   ]);
   revalidatePath(`/order/${token}`);
 }
+
+/** The "I've paid" step: the customer types the UPI transaction (UTR) number from their payment app. */
+export async function submitPayment(token: string, _prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
+  const ref = String(formData.get("ref") ?? "").replace(/\s/g, "").toUpperCase();
+  if (!/^[A-Z0-9]{8,30}$/.test(ref))
+    return { error: "Enter the UPI transaction ID from your payment app (usually 12 digits)." };
+
+  const order = await prisma.order.findUnique({ where: { trackingToken: token } });
+  if (!order) return { error: "Order not found." };
+  if (order.status !== "PENDING_PAYMENT") return {};
+
+  await prisma.$transaction([
+    prisma.order.update({ where: { id: order.id }, data: { paymentRef: ref } }),
+    prisma.orderEvent.create({
+      data: { orderId: order.id, status: "PENDING_PAYMENT", note: `Customer reported payment, UTR ${ref}` },
+    }),
+  ]);
+  revalidatePath(`/order/${token}`);
+  redirect(`/order/${token}`);
+}

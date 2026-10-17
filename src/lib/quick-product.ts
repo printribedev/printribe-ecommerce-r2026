@@ -26,6 +26,11 @@ export const QUICK_PRODUCT = {
   tiers: [{ minQty: 10, discount: 3000 }] as Tier[],
   /** Optional photo under /public, e.g. "/products/tee.jpg" */
   image: null as string | null,
+  /**
+   * WhatsApp number customers can send their payment screenshot to, digits only with country
+   * code, e.g. "919876543210". Leave empty to hide the WhatsApp button.
+   */
+  whatsapp: "",
 };
 
 export type QuickProduct = typeof QUICK_PRODUCT;

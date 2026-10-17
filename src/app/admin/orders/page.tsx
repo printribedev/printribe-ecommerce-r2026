@@ -20,7 +20,7 @@ export default async function OrdersPage() {
         <ul className="mt-6 divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
           {orders.map((o) => {
             const addr = o.shippingAddr as { name?: string; city?: string };
-            const needsCheck = o.status === "PENDING_PAYMENT" && o.paymentProofKey;
+            const needsCheck = o.status === "PENDING_PAYMENT" && (o.paymentProofKey || o.paymentRef);
             return (
               <li key={o.id}>
                 <Link

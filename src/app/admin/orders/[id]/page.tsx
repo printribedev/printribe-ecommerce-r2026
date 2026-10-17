@@ -41,11 +41,19 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
       {order.status === "PENDING_PAYMENT" && (
         <Card title="Verify payment" desc={`Check ${formatINR(order.total)} has reached your bank/UPI, then confirm.`}>
+          <p className="mb-3 text-sm">
+            UPI transaction ID from customer:{" "}
+            {order.paymentRef ? (
+              <b className="font-mono">{order.paymentRef}</b>
+            ) : (
+              <span className="text-neutral-500">not given yet</span>
+            )}
+          </p>
           {proofUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={proofUrl} alt="Payment screenshot" className="max-h-96 rounded-lg border" />
           ) : (
-            <p className="text-sm text-neutral-500">Customer hasn&apos;t uploaded a screenshot yet.</p>
+            <p className="text-sm text-neutral-500">No screenshot uploaded.</p>
           )}
           <div className="mt-4 flex gap-3">
             <form action={confirmPayment.bind(null, order.id)}>
