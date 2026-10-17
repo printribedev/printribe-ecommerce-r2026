@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getProfile } from "@/lib/auth";
+import { dict, errorMessage } from "@/lib/i18n";
 import { INDIAN_STATES } from "@/lib/india";
+import { getLang } from "@/lib/lang";
 import { shippingFee, unitPrice } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
@@ -37,20 +39,27 @@ function orderNumber() {
 }
 
 export async function placeOrder(_prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
+  const lang = getLang(); // error messages come back in the visitor's language
   const parsed = Schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    return { error: issue.message, field: String(issue.path[0] ?? "") };
+    const field = String(parsed.error.issues[0].path[0] ?? "");
+    return {
+      error: field === "state" ? errorMessage(lang, "state.required") : dict[lang].details.generic,
+      field,
+    };
   }
   const d = parsed.data;
 
   // 1. Content rules: no dummy or gibberish entries (same rules the form shows live).
   const problems = validateDetails(d);
   const firstBad = (Object.keys(problems) as (keyof typeof problems)[])[0];
-  if (firstBad) return { error: problems[firstBad], field: firstBad };
+  if (firstBad) return { error: errorMessage(lang, problems[firstBad]!), field: firstBad };
 
   // 2. Real-world checks: does the email's domain exist, and does the pincode match the state?
-  const [emailProblem, pinProblem] = await Promise.all([checkEmailDomain(d.email), checkPincode(d.pincode, d.state)]);
+  const [emailProblem, pinProblem] = await Promise.all([
+    checkEmailDomain(d.email, lang),
+    checkPincode(d.pincode, d.state, lang),
+  ]);
   if (emailProblem) return { error: emailProblem, field: "email" };
   if (pinProblem) return { error: pinProblem, field: "pincode" };
 
@@ -118,12 +127,12 @@ export async function attachProof(token: string, key: string) {
 
 /** The "I've paid" step: the customer types the UPI transaction (UTR) number from their payment app. */
 export async function submitPayment(token: string, _prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
+  const lang = getLang();
   const ref = String(formData.get("ref") ?? "").replace(/\s/g, "").toUpperCase();
-  if (!/^[A-Z0-9]{8,30}$/.test(ref))
-    return { error: "Enter the UPI transaction ID from your payment app (usually 12 digits)." };
+  if (!/^[A-Z0-9]{8,30}$/.test(ref)) return { error: errorMessage(lang, "pay.utr") };
 
   const order = await prisma.order.findUnique({ where: { trackingToken: token } });
-  if (!order) return { error: "Order not found." };
+  if (!order) return { error: errorMessage(lang, "order.notfound") };
   if (order.status !== "PENDING_PAYMENT") return {};
 
   await prisma.$transaction([

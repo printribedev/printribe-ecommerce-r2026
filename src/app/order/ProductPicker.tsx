@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { dict, fmt, type Lang } from "@/lib/i18n";
 import { formatINR } from "@/lib/money";
 import { shippingFee, unitPrice } from "@/lib/pricing";
-import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { QUICK_PRODUCT as P, colourLabel } from "@/lib/quick-product";
 import { ProductGallery } from "./ProductGallery";
 import { SizeChart } from "./SizeChart";
 
@@ -38,7 +39,8 @@ function PoloVisual({ hex }: { hex: string }) {
   );
 }
 
-export function ProductPicker() {
+export function ProductPicker({ lang }: { lang: Lang }) {
+  const t = dict[lang].product;
   const [size, setSize] = useState("");
   const [colour, setColour] = useState(P.colours[0].name);
   const [qty, setQty] = useState(P.moq);
@@ -62,14 +64,14 @@ export function ProductPicker() {
       {P.colours.length > 1 ? (
         <div>
           <p className="mb-2 text-sm font-medium">
-            Colour: <span className="font-normal text-neutral-600">{colour}</span>
+            {t.colour}: <span className="font-normal text-neutral-600">{colourLabel(lang, colour)}</span>
           </p>
           <div className="flex gap-3">
             {P.colours.map((c) => (
               <button
                 type="button"
                 key={c.name}
-                aria-label={c.name}
+                aria-label={colourLabel(lang, c.name)}
                 aria-pressed={colour === c.name}
                 onClick={() => setColour(c.name)}
                 className={`h-11 w-11 rounded-full border-2 ${
@@ -82,12 +84,12 @@ export function ProductPicker() {
         </div>
       ) : (
         <p className="text-sm font-medium">
-          Colour: <span className="font-normal text-neutral-600">{colour}</span>
+          {t.colour}: <span className="font-normal text-neutral-600">{colourLabel(lang, colour)}</span>
         </p>
       )}
 
       <div>
-        <p className="mb-2 text-sm font-medium">Size</p>
+        <p className="mb-2 text-sm font-medium">{t.size}</p>
         <div className="flex flex-wrap gap-2">
           {P.sizes.map((s) => (
             <button
@@ -103,15 +105,15 @@ export function ProductPicker() {
             </button>
           ))}
         </div>
-        <SizeChart selected={size} />
+        <SizeChart selected={size} lang={lang} />
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Quantity</p>
+        <p className="mb-2 text-sm font-medium">{t.quantity}</p>
         <div className="inline-flex items-center rounded-lg border border-neutral-300 bg-white">
           <button
             type="button"
-            aria-label="Decrease quantity"
+            aria-label={t.decrease}
             onClick={() => setQty((q) => Math.max(P.moq, q - 1))}
             className="h-12 w-12 text-xl"
           >
@@ -120,7 +122,7 @@ export function ProductPicker() {
           <span className="w-12 text-center font-medium">{qty}</span>
           <button
             type="button"
-            aria-label="Increase quantity"
+            aria-label={t.increase}
             onClick={() => setQty((q) => Math.min(P.maxQty, q + 1))}
             className="h-12 w-12 text-xl"
           >
@@ -129,7 +131,9 @@ export function ProductPicker() {
         </div>
         {P.tiers.length > 0 && (
           <p className="mt-2 text-xs text-neutral-500">
-            {P.tiers.map((t) => `${t.minQty}+ pieces: ${formatINR(P.price - t.discount)} each`).join(" · ")}
+            {P.tiers
+              .map((tier) => fmt(t.tier, { n: tier.minQty, price: formatINR(P.price - tier.discount) }))
+              .join(" · ")}
           </p>
         )}
       </div>
@@ -143,16 +147,16 @@ export function ProductPicker() {
             <span>{formatINR(subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Delivery</span>
-            <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
+            <span>{t.delivery}</span>
+            <span>{shipping === 0 ? t.free : formatINR(shipping)}</span>
           </div>
           <div className="flex items-baseline justify-between pt-1 text-foreground">
-            <span className="font-medium">Total</span>
+            <span className="font-medium">{t.total}</span>
             <span className="text-xl font-bold">{formatINR(subtotal + shipping)}</span>
           </div>
           {shipping > 0 && (
             <p className="text-xs text-tribe-dark">
-              Add {formatINR(P.shipping.freeAbove - subtotal)} more for free delivery
+              {fmt(t.addMore, { amount: formatINR(P.shipping.freeAbove - subtotal) })}
             </p>
           )}
         </div>
@@ -161,14 +165,14 @@ export function ProductPicker() {
             href={next}
             className="block w-full rounded-lg bg-tribe px-4 py-4 text-center text-base font-semibold text-white hover:bg-tribe-dark"
           >
-            Continue
+            {t.continue}
           </Link>
         ) : (
           <button
             disabled
             className="block w-full rounded-lg bg-neutral-300 px-4 py-4 text-center text-base font-semibold text-white"
           >
-            Choose a size to continue
+            {t.chooseSize}
           </button>
         )}
       </div>

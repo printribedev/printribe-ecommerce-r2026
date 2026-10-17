@@ -1,27 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { dict, eventText, fmt } from "@/lib/i18n";
+import { getLang } from "@/lib/lang";
 import { formatINR } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { QUICK_PRODUCT as P, colourLabel, productText } from "@/lib/quick-product";
 import { attachProof } from "../actions";
+import { OrderHeader } from "../OrderHeader";
 import { Stepper } from "../Stepper";
 import { PaymentForm } from "./PaymentForm";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Your order · Printribe", robots: { index: false } };
-
-const STATUS_COPY: Record<string, string> = {
-  PENDING_PAYMENT: "Awaiting payment",
-  PAID: "Payment confirmed",
-  IN_DESIGN: "In design",
-  IN_PRODUCTION: "In production",
-  QC: "Quality check",
-  SHIPPED: "Shipped",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
-  REFUNDED: "Refunded",
-};
+export const metadata: Metadata = { title: "Printribe", robots: { index: false } };
 
 /** Screenshot upload needs the R2 bucket, so only offer it once that's configured. */
 const uploadsEnabled = () => Boolean(process.env.R2_PRIVATE_BUCKET && process.env.R2_ACCOUNT_ID);
@@ -32,6 +23,10 @@ export default async function OrderStatusPage({ params }: { params: { token: str
     include: { items: true, events: { orderBy: { createdAt: "asc" } } },
   });
   if (!order) notFound();
+
+  const lang = getLang();
+  const t = dict[lang];
+  const locale = lang === "kn" ? "kn-IN" : "en-IN";
 
   const awaiting = order.status === "PENDING_PAYMENT";
   const submitted = Boolean(order.paymentRef || order.paymentProofKey);
@@ -44,29 +39,26 @@ export default async function OrderStatusPage({ params }: { params: { token: str
 
   return (
     <main className="mx-auto max-w-xl space-y-6 px-4 pb-16 pt-6">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/printribe-logo.png" alt="Printribe" className="h-8 w-auto" />
-      <Stepper current={stage} />
+      <OrderHeader lang={lang} />
+      <Stepper current={stage} lang={lang} />
 
       {/* ───── Step 3: pay ───── */}
       {awaiting && !submitted && (
         <section className="rounded-2xl border border-neutral-200 bg-white p-5 text-center">
-          <p className="text-sm text-neutral-500">Order {order.number}</p>
-          <h1 className="mt-1 text-xl font-bold">Pay {formatINR(order.total)} by UPI</h1>
-          <p className="mt-1 text-sm text-neutral-600">Scan with any UPI app and pay the exact amount.</p>
+          <p className="text-sm text-neutral-500">{fmt(t.pay.order, { n: order.number })}</p>
+          <h1 className="mt-1 text-xl font-bold">{fmt(t.pay.title, { amount: formatINR(order.total) })}</h1>
+          <p className="mt-1 text-sm text-neutral-600">{t.pay.scan}</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/upi-qr.png" alt="UPI QR code" className="mx-auto mt-4 w-56 max-w-full" />
-          <p className="mt-2 text-xs text-neutral-500">
-            Add <b>{order.number}</b> in the payment note if your app allows.
-          </p>
+          <img src="/upi-qr.png" alt={t.pay.qrAlt} className="mx-auto mt-4 w-56 max-w-full" />
+          <p className="mt-2 text-xs text-neutral-500">{fmt(t.pay.noteHint, { n: order.number })}</p>
 
           <div className="mt-6 border-t pt-5">
-            <h2 className="mb-3 text-left text-base font-semibold">After you&apos;ve paid</h2>
-            <PaymentForm token={order.trackingToken} />
+            <h2 className="mb-3 text-left text-base font-semibold">{t.pay.afterPaid}</h2>
+            <PaymentForm token={order.trackingToken} lang={lang} />
             {uploadsEnabled() && (
               <div className="mt-4 border-t pt-4 text-left">
-                <p className="mb-2 text-sm font-medium">Optional: upload your payment screenshot</p>
-                <ImageUploader kind="artwork" label="Upload screenshot" onDone={attachProof.bind(null, order.trackingToken)} />
+                <p className="mb-2 text-sm font-medium">{t.pay.uploadHint}</p>
+                <ImageUploader kind="artwork" label={t.pay.upload} onDone={attachProof.bind(null, order.trackingToken)} />
               </div>
             )}
           </div>
@@ -79,22 +71,22 @@ export default async function OrderStatusPage({ params }: { params: { token: str
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-tribe text-2xl text-white">
             ✓
           </div>
-          <p className="mt-3 text-sm font-semibold text-gold-dark">ಧನ್ಯವಾದಗಳು · Thank you</p>
+          <p className="mt-3 text-sm font-semibold text-gold-dark">{t.done.thanks}</p>
           <h1 className="mt-1 text-xl font-bold">
-            {awaiting ? "Payment submitted" : order.status === "CANCELLED" ? "Order cancelled" : "Order confirmed"}
+            {awaiting ? t.done.submitted : order.status === "CANCELLED" ? t.done.cancelled : t.done.confirmed}
           </h1>
           <p className="mt-1 text-sm text-neutral-600">
             {awaiting
-              ? "We'll verify your payment and confirm your order shortly. You can close this page and come back to this link any time."
+              ? t.done.bodySubmitted
               : order.status === "CANCELLED"
-                ? "This order was cancelled. Contact us if you think this is a mistake."
-                : "Thank you! Your payment is confirmed and we're getting started."}
+                ? t.done.bodyCancelled
+                : t.done.bodyConfirmed}
           </p>
           <p className="mt-4 inline-block rounded-full bg-tribe-light px-3 py-1 text-sm font-medium text-tribe-dark">
-            {order.number} · {STATUS_COPY[order.status] ?? order.status}
+            {order.number} · {t.status[order.status]}
           </p>
           {awaiting && order.paymentRef && (
-            <p className="mt-3 text-xs text-neutral-500">Transaction ID you gave us: {order.paymentRef}</p>
+            <p className="mt-3 text-xs text-neutral-500">{fmt(t.done.utrGiven, { ref: order.paymentRef })}</p>
           )}
           {awaiting && !order.paymentProofKey && whatsappHref && (
             <a
@@ -103,21 +95,22 @@ export default async function OrderStatusPage({ params }: { params: { token: str
               rel="noreferrer"
               className="mt-4 block rounded-lg border border-neutral-300 px-4 py-3 text-sm font-medium hover:bg-neutral-50"
             >
-              Send payment screenshot on WhatsApp
+              {t.done.whatsapp}
             </a>
           )}
         </section>
       )}
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <h2 className="font-semibold">Items</h2>
+        <h2 className="font-semibold">{t.done.items}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {order.items.map((i) => (
             <li key={i.id} className="flex justify-between gap-3">
               <span>
-                {i.productName}
+                {i.sku === P.sku ? productText(lang).name : i.productName}
                 <span className="block text-neutral-500">
-                  {[i.colorName, i.size].filter(Boolean).join(" · ")} · {i.qty} × {formatINR(i.unitPrice)}
+                  {[i.colorName ? colourLabel(lang, i.colorName) : null, i.size].filter(Boolean).join(" · ")} · {i.qty} ×{" "}
+                  {formatINR(i.unitPrice)}
                 </span>
               </span>
               <span className="font-medium">{formatINR(i.lineTotal)}</span>
@@ -125,24 +118,24 @@ export default async function OrderStatusPage({ params }: { params: { token: str
           ))}
         </ul>
         <p className="mt-4 flex justify-between border-t pt-3 text-sm text-neutral-600">
-          <span>Delivery</span>
-          <span>{order.shipping === 0 ? "Free" : formatINR(order.shipping)}</span>
+          <span>{t.done.delivery}</span>
+          <span>{order.shipping === 0 ? t.done.free : formatINR(order.shipping)}</span>
         </p>
         <p className="mt-1 flex justify-between font-semibold">
-          <span>Total</span>
+          <span>{t.done.total}</span>
           <span>{formatINR(order.total)}</span>
         </p>
       </section>
 
       {stage === 4 && (
         <section className="rounded-2xl border border-neutral-200 bg-white p-5">
-          <h2 className="font-semibold">Order timeline</h2>
+          <h2 className="font-semibold">{t.done.timeline}</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {order.events.map((e) => (
               <li key={e.id} className="flex justify-between gap-3">
-                <span>{e.note ?? STATUS_COPY[e.status]}</span>
+                <span>{eventText(lang, e.note, e.status)}</span>
                 <span className="shrink-0 text-xs text-neutral-500">
-                  {e.createdAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                  {e.createdAt.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}
                 </span>
               </li>
             ))}
@@ -150,9 +143,7 @@ export default async function OrderStatusPage({ params }: { params: { token: str
         </section>
       )}
 
-      <p className="text-center text-xs text-neutral-500">
-        Save this page&apos;s link to check your order status any time.
-      </p>
+      <p className="text-center text-xs text-neutral-500">{t.done.saveLink}</p>
     </main>
   );
 }

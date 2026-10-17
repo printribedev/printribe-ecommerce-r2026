@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Kannada } from "next/font/google";
+import { getLang } from "@/lib/lang";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -21,7 +22,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang={getLang()}>
       <body className={`${inter.variable} ${kannada.variable} font-sans antialiased`}>{children}</body>
     </html>
   );

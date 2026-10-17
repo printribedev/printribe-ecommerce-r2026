@@ -1,3 +1,4 @@
+import type { Lang } from "@/lib/i18n";
 import type { Tier } from "@/lib/pricing";
 
 /** All measurements in inches. `chest` is the number in the size name (S-36 = 36"). */
@@ -44,8 +45,18 @@ export const QUICK_PRODUCT = {
   sizes: SIZE_CHART.map((r) => r.size),
   /** Size guide shown on the product page (inches) */
   sizeChart: SIZE_CHART,
-  /** One colour = no colour picker is shown */
-  colours: [{ name: "Black", hex: "#111111" }],
+  /** One colour = no colour picker is shown. `kn` is the Kannada name. */
+  colours: [{ name: "Black", hex: "#111111", kn: "ಕಪ್ಪು" }],
+  /** The same customer-facing text in Kannada (shown when the visitor switches language) */
+  kn: {
+    name: "ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವ ಪೋಲೋ",
+    eyebrow: "ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವ ವಿಶೇಷ",
+    tagline: "ಹೆಮ್ಮೆಯ ಕನ್ನಡಿಗ. ನಿಮ್ಮ ಹೆಮ್ಮೆಯನ್ನು ಧರಿಸಿ. ಕರ್ನಾಟಕವನ್ನು ಸಂಭ್ರಮಿಸಿ.",
+    description:
+      "ಕೆಲವನ್ನು ನಾವು ಧರಿಸುತ್ತೇವೆ. ಕೆಲವನ್ನು ಹೃದಯದಲ್ಲಿ ಹೊತ್ತುಕೊಳ್ಳುತ್ತೇವೆ. ಈ ಕಪ್ಪು ಪೋಲೋ ಎರಡನ್ನೂ ಹೊತ್ತಿದೆ: ಕರ್ನಾಟಕದ ನಕ್ಷೆ ಮತ್ತು ‘ಹೆಮ್ಮೆಯ ಕನ್ನಡಿಗ’ ಎಂಬ ಮಾತುಗಳು, ಕನ್ನಡ ಧ್ವಜದ ಬಣ್ಣಗಳಲ್ಲಿ ನಿಮ್ಮ ಹೃದಯದ ಮೇಲೆ ನಾಜೂಕಾಗಿ ಕಸೂತಿ ಮಾಡಲಾಗಿದೆ. ಕನ್ನಡಿಗರಿಗಾಗಿ ತಯಾರಿಸಲಾಗಿದೆ: ರಾಜ್ಯೋತ್ಸವಕ್ಕಾಗಿ ಮತ್ತು ನೀವು ಎಲ್ಲಿಂದ ಬಂದವರು ಎಂದು ಹೇಳಲು ಬಯಸುವ ಪ್ರತಿದಿನಕ್ಕಾಗಿ.",
+    highlights: ["ಪ್ರೀಮಿಯಂ ಗುಣಮಟ್ಟ", "ಆರಾಮದಾಯಕ ಫಿಟ್", "ನಾಜೂಕು ಕಸೂತಿ", "ಕನ್ನಡಿಗರಿಗಾಗಿ ತಯಾರಿಸಲಾಗಿದೆ"],
+    closing: "ಸಂಪ್ರದಾಯದಲ್ಲಿ ಬೇರೂರಿದೆ. ಹೆಮ್ಮೆಯಿಂದ ಧರಿಸಿ.",
+  },
   /**
    * Discount per piece off `price` once the order reaches minQty (paise).
    * 2–9 pcs ₹549 · 10–19 pcs ₹499 · 20+ pcs ₹469
@@ -70,3 +81,21 @@ export const QUICK_PRODUCT = {
 };
 
 export type QuickProduct = typeof QUICK_PRODUCT;
+
+/** The product's customer-facing text in the visitor's language (price, sizes etc. are the same). */
+export function productText(lang: Lang) {
+  const P = QUICK_PRODUCT;
+  return lang === "kn" ? P.kn : {
+    name: P.name,
+    eyebrow: P.eyebrow,
+    tagline: P.tagline,
+    description: P.description,
+    highlights: P.highlights,
+    closing: P.closing,
+  };
+}
+
+export function colourLabel(lang: Lang, name: string): string {
+  const c = QUICK_PRODUCT.colours.find((x) => x.name === name);
+  return lang === "kn" && c ? c.kn : name;
+}

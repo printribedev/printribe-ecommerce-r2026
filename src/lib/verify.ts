@@ -1,5 +1,6 @@
 import "server-only";
 import { promises as dns } from "node:dns";
+import { errorMessage, type Lang } from "./i18n";
 
 /**
  * Real-world checks that need the network. Both FAIL OPEN: if the lookup itself is down or slow
@@ -12,10 +13,10 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 }
 
 /** Returns an error message if the email's domain can't receive mail, otherwise null. */
-export async function checkEmailDomain(email: string): Promise<string | null> {
+export async function checkEmailDomain(email: string, lang: Lang): Promise<string | null> {
   const domain = email.split("@")[1]?.toLowerCase();
-  if (!domain) return "Enter a valid email address.";
-  const notFound = `We couldn't find "${domain}". Please check your email address.`;
+  if (!domain) return errorMessage(lang, "email.invalid");
+  const notFound = errorMessage(lang, "email.domain", { domain });
   const code = (e: unknown) => (e as { code?: string })?.code ?? "";
   const missing = (e: unknown) => ["ENOTFOUND", "ENODATA"].includes(code(e));
 
@@ -48,7 +49,7 @@ const norm = (s: string) =>
   s.toLowerCase().replace(/&/g, "and").replace(/[^a-z]/g, "").replace(/^theu/, "u");
 
 /** Pincode must exist, and belong to the state the customer picked. */
-export async function checkPincode(pincode: string, state: string): Promise<string | null> {
+export async function checkPincode(pincode: string, state: string, lang: Lang): Promise<string | null> {
   try {
     const res = await withTimeout(
       fetch(`https://api.postalpincode.in/pincode/${pincode}`, { cache: "force-cache", next: { revalidate: 86400 } }),
@@ -58,7 +59,7 @@ export async function checkPincode(pincode: string, state: string): Promise<stri
     const body = (await res.json()) as { Status?: string; PostOffice?: { State?: string }[] | null }[];
     const first = body?.[0];
     if (!first) return null;
-    if (first.Status === "Error" || first.Status === "404") return `We couldn't find pincode ${pincode}. Please check it.`;
+    if (first.Status === "Error" || first.Status === "404") return errorMessage(lang, "pincode.notfound", { pin: pincode });
     const apiState = first.PostOffice?.[0]?.State;
     if (first.Status !== "Success" || !apiState) return null;
 
@@ -67,7 +68,7 @@ export async function checkPincode(pincode: string, state: string): Promise<stri
     // Ladakh pincodes are still listed under Jammu & Kashmir by India Post.
     const pair = new Set([a, b]);
     const ok = a === b || a.includes(b) || b.includes(a) || (pair.has("ladakh") && pair.has("jammuandkashmir"));
-    return ok ? null : `Pincode ${pincode} belongs to ${apiState}, but you chose ${state}. Please check both.`;
+    return ok ? null : errorMessage(lang, "pincode.mismatch", { pin: pincode, apiState, state });
   } catch {
     return null;
   }
