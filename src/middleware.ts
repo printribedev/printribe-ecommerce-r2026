@@ -5,6 +5,14 @@ import { createServerClient } from "@supabase/ssr";
 const PROTECTED = ["/admin", "/account"];
 
 export async function middleware(request: NextRequest) {
+  // If Supabase falls back to the Site URL after an email sign-in, the sign-in code arrives on "/".
+  // Hand it to the callback route so the person still gets signed in.
+  if (request.nextUrl.pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
