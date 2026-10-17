@@ -2,7 +2,6 @@ import type { Tier } from "@/lib/pricing";
 
 /** All measurements in inches. `chest` is the number in the size name (S-36 = 36"). */
 const SIZE_CHART = [
-  { size: "32", chest: 32, width: 16.5, height: 23.5 },
   { size: "XS", chest: 34, width: 17.5, height: 25.5 },
   { size: "S", chest: 36, width: 18, height: 26.5 },
   { size: "M", chest: 38, width: 19, height: 27.5 },
@@ -11,7 +10,6 @@ const SIZE_CHART = [
   { size: "XXL", chest: 44, width: 22, height: 30.5 },
   { size: "XXXL", chest: 46, width: 23, height: 32 },
   { size: "4XL", chest: 48, width: 24, height: 32.5 },
-  { size: "5XL", chest: 50, width: 25, height: 33 },
 ];
 
 /**
