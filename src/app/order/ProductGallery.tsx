@@ -35,6 +35,7 @@ export function ProductGallery() {
               alt={img.alt}
               fill
               priority={i === 0}
+              loading={i === 0 ? undefined : "eager"}
               sizes="(max-width: 640px) 100vw, 576px"
               className="object-cover"
             />
