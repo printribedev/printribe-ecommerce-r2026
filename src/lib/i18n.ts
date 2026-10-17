@@ -16,6 +16,7 @@ export function fmt(template: string, vars: Record<string, string | number> = {}
 
 const en = {
   switchTo: "ಕನ್ನಡ",
+  switching: "Switching language…",
   stepper: ["Choose", "Your details", "Pay", "Done"],
 
   product: {
@@ -151,6 +152,7 @@ export type Dict = typeof en;
 
 const kn: Dict = {
   switchTo: "English",
+  switching: "ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗುತ್ತಿದೆ…",
   stepper: ["ಆಯ್ಕೆ", "ನಿಮ್ಮ ವಿವರಗಳು", "ಪಾವತಿ", "ಮುಗಿದಿದೆ"],
 
   product: {
