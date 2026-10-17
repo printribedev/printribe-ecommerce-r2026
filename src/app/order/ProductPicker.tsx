@@ -43,26 +43,32 @@ export function ProductPicker() {
         )}
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium">
+      {P.colours.length > 1 ? (
+        <div>
+          <p className="mb-2 text-sm font-medium">
+            Colour: <span className="font-normal text-neutral-600">{colour}</span>
+          </p>
+          <div className="flex gap-3">
+            {P.colours.map((c) => (
+              <button
+                type="button"
+                key={c.name}
+                aria-label={c.name}
+                aria-pressed={colour === c.name}
+                onClick={() => setColour(c.name)}
+                className={`h-11 w-11 rounded-full border-2 ${
+                  colour === c.name ? "border-tribe ring-2 ring-tribe/30" : "border-neutral-300"
+                }`}
+                style={{ background: c.hex }}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm font-medium">
           Colour: <span className="font-normal text-neutral-600">{colour}</span>
         </p>
-        <div className="flex gap-3">
-          {P.colours.map((c) => (
-            <button
-              type="button"
-              key={c.name}
-              aria-label={c.name}
-              aria-pressed={colour === c.name}
-              onClick={() => setColour(c.name)}
-              className={`h-11 w-11 rounded-full border-2 ${
-                colour === c.name ? "border-tribe ring-2 ring-tribe/30" : "border-neutral-300"
-              }`}
-              style={{ background: c.hex }}
-            />
-          ))}
-        </div>
-      </div>
+      )}
 
       <div>
         <p className="mb-2 text-sm font-medium">Size</p>

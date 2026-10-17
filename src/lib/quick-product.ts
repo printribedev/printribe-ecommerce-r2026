@@ -18,10 +18,8 @@ export const QUICK_PRODUCT = {
   moq: 1,
   maxQty: 500,
   sizes: ["S", "M", "L", "XL", "2XL"],
-  colours: [
-    { name: "White", hex: "#FFFFFF" },
-    { name: "Black", hex: "#111111" },
-  ],
+  /** One colour = no colour picker is shown */
+  colours: [{ name: "Black", hex: "#111111" }],
   /**
    * Discount per piece off `price` once the order reaches minQty (paise).
    * 2–9 pcs ₹549 · 10–19 pcs ₹499 · 20+ pcs ₹469
