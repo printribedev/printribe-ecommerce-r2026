@@ -8,7 +8,7 @@ export function generateMetadata(): Metadata {
   const title = `${text.name} · Printribe`;
   return {
     // Needed so the share preview image (WhatsApp, Instagram…) gets a full web address.
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://printribe-ecommerce-r2026.vercel.app"),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://printribe-kannada-rajyotsava.vercel.app"),
     title,
     description: text.tagline,
     openGraph: {
