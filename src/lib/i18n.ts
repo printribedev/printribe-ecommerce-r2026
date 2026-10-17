@@ -100,6 +100,11 @@ const en = {
     submitting: "Submitting…",
     uploadHint: "Optional: upload your payment screenshot",
     upload: "Upload screenshot",
+    chooseOne: "Confirm your payment in either way:",
+    optionUtr: "Enter transaction ID",
+    optionShot: "Upload screenshot",
+    shotHelp: "Upload a clear screenshot of the payment success screen, showing the amount and transaction ID.",
+    shotUnavailable: "Screenshot upload isn't available yet. Please enter your transaction ID instead.",
   },
 
   done: {
@@ -230,6 +235,11 @@ const kn: Dict = {
     submitting: "ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ…",
     uploadHint: "ಐಚ್ಛಿಕ: ನಿಮ್ಮ ಪಾವತಿ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
     upload: "ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್",
+    chooseOne: "ನಿಮ್ಮ ಪಾವತಿಯನ್ನು ಈ ಎರಡರಲ್ಲಿ ಒಂದು ರೀತಿಯಲ್ಲಿ ದೃಢೀಕರಿಸಿ:",
+    optionUtr: "ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ನಮೂದಿಸಿ",
+    optionShot: "ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್",
+    shotHelp: "ಮೊತ್ತ ಮತ್ತು ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ಕಾಣುವಂತೆ ಪಾವತಿ ಯಶಸ್ವಿ ಪರದೆಯ ಸ್ಪಷ್ಟ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
+    shotUnavailable: "ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಬದಲಿಗೆ ನಿಮ್ಮ ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ನಮೂದಿಸಿ.",
   },
 
   done: {

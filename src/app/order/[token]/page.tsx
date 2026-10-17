@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ImageUploader } from "@/components/admin/ImageUploader";
 import { dict, eventText, fmt } from "@/lib/i18n";
 import { getLang } from "@/lib/lang";
 import { formatINR } from "@/lib/money";
@@ -9,7 +8,7 @@ import { QUICK_PRODUCT as P, colourLabel, productText } from "@/lib/quick-produc
 import { attachProof } from "../actions";
 import { OrderHeader } from "../OrderHeader";
 import { Stepper } from "../Stepper";
-import { PaymentForm } from "./PaymentForm";
+import { PaymentOptions } from "./PaymentOptions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Printribe", robots: { index: false } };
@@ -54,13 +53,12 @@ export default async function OrderStatusPage({ params }: { params: { token: str
 
           <div className="mt-6 border-t pt-5">
             <h2 className="mb-3 text-left text-base font-semibold">{t.pay.afterPaid}</h2>
-            <PaymentForm token={order.trackingToken} lang={lang} />
-            {uploadsEnabled() && (
-              <div className="mt-4 border-t pt-4 text-left">
-                <p className="mb-2 text-sm font-medium">{t.pay.uploadHint}</p>
-                <ImageUploader kind="artwork" label={t.pay.upload} onDone={attachProof.bind(null, order.trackingToken)} />
-              </div>
-            )}
+            <PaymentOptions
+              token={order.trackingToken}
+              lang={lang}
+              uploadsEnabled={uploadsEnabled()}
+              onScreenshot={attachProof.bind(null, order.trackingToken)}
+            />
           </div>
         </section>
       )}
