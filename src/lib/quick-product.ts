@@ -12,7 +12,7 @@ export const QUICK_PRODUCT = {
   description:
     "180 GSM combed cotton, soft hand-feel, colour-fast print. Pick your size and colour and we'll take it from there.",
   /** paise per piece, GST included */
-  price: 49900,
+  price: 59900,
   gstRate: 5,
   hsn: "6109",
   moq: 1,
@@ -22,8 +22,15 @@ export const QUICK_PRODUCT = {
     { name: "White", hex: "#FFFFFF" },
     { name: "Black", hex: "#111111" },
   ],
-  /** Discount per piece once the order reaches minQty (paise) */
-  tiers: [{ minQty: 10, discount: 3000 }] as Tier[],
+  /**
+   * Discount per piece off `price` once the order reaches minQty (paise).
+   * 2–9 pcs ₹549 · 10–19 pcs ₹499 · 20+ pcs ₹469
+   */
+  tiers: [
+    { minQty: 2, discount: 5000 },
+    { minQty: 10, discount: 10000 },
+    { minQty: 20, discount: 13000 },
+  ] as Tier[],
   /** Optional photo under /public, e.g. "/products/tee.jpg" */
   image: null as string | null,
   /**
