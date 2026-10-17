@@ -1,5 +1,6 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
-import type { Profile } from "@prisma/client";
+import { Prisma, type Profile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +22,7 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * Emails listed in ADMIN_EMAILS (comma-separated env) become ADMIN when their profile is created,
  * so you can bootstrap the first admin without touching the database.
  */
-export async function getProfile(): Promise<Profile | null> {
+export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = createClient();
   const {
     data: { user },
@@ -37,15 +38,24 @@ export async function getProfile(): Promise<Profile | null> {
     .filter(Boolean);
   const email = user.email.toLowerCase();
 
-  return prisma.profile.create({
-    data: {
-      id: user.id,
-      email,
-      name: (user.user_metadata?.full_name as string | undefined) ?? null,
-      role: adminEmails.includes(email) ? "ADMIN" : "CUSTOMER",
-    },
-  });
-}
+  try {
+    return await prisma.profile.create({
+      data: {
+        id: user.id,
+        email,
+        name: (user.user_metadata?.full_name as string | undefined) ?? null,
+        role: adminEmails.includes(email) ? "ADMIN" : "CUSTOMER",
+      },
+    });
+  } catch (e) {
+    // The layout and the page can both try to create the profile on a first visit;
+    // whichever loses the race just reads the row the other one made.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return prisma.profile.findUnique({ where: { id: user.id } });
+    }
+    throw e;
+  }
+});
 
 export function canAccess(profile: Profile, section: AdminSection): boolean {
   if (profile.role === "ADMIN") return true;
