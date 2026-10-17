@@ -16,7 +16,7 @@ export default function DetailsPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const selection = parseSelection(searchParams);
-  if (!selection) redirect("/order");
+  if (!selection) redirect("/");
 
   const unit = unitPrice({ basePrice: P.price, tiers: P.tiers, qty: selection.qty });
   const total = formatINR(unit * selection.qty);
@@ -35,7 +35,7 @@ export default function DetailsPage({
           <p className="text-neutral-600">
             {selection.colour} · {selection.size} · {selection.qty} × {formatINR(unit)}
           </p>
-          <Link href="/order" className="text-xs text-tribe underline">
+          <Link href="/" className="text-xs text-tribe underline">
             Change
           </Link>
         </div>
