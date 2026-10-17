@@ -60,7 +60,6 @@ export const QUICK_PRODUCT = {
   /** Product photos under /public/products, all cropped to 4:5. The first one is the main image. */
   images: [
     { src: "/products/polo-front.webp", alt: "Black Kannada Rajyotsava polo, front view" },
-    { src: "/products/polo-embroidery.webp", alt: "Close-up of the embroidered Karnataka map and ಹೆಮ್ಮೆಯ ಕನ್ನಡಿಗ" },
     { src: "/products/polo-folded.webp", alt: "Stack of folded Kannada Rajyotsava polos" },
   ],
   /**
