@@ -10,6 +10,7 @@ import { INDIAN_STATES } from "@/lib/india";
 import { getLang } from "@/lib/lang";
 import { shippingFee, unitPrice } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
+import { privateObjectExists } from "@/lib/r2";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
 import { normalizePhone, validateDetails } from "@/lib/validation";
 import { checkEmailDomain, checkPincode } from "@/lib/verify";
@@ -109,38 +110,39 @@ export async function placeOrder(_prev: OrderFormState, formData: FormData): Pro
 }
 
 /** Called after the customer uploads their payment screenshot. */
-export async function attachProof(token: string, key: string) {
-  // Only keys our own upload route hands out are accepted.
-  if (!/^artwork\/\d{4}-\d{2}\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(key)) throw new Error("Invalid file");
-
-  const order = await prisma.order.findUnique({ where: { trackingToken: token } });
-  if (!order || order.status !== "PENDING_PAYMENT") throw new Error("Order not found");
-
-  await prisma.$transaction([
-    prisma.order.update({ where: { id: order.id }, data: { paymentProofKey: key } }),
-    prisma.orderEvent.create({
-      data: { orderId: order.id, status: "PENDING_PAYMENT", note: "Payment screenshot uploaded" },
-    }),
-  ]);
-  revalidatePath(`/order/${token}`);
-}
-
-/** The "I've paid" step: the customer types the UPI transaction (UTR) number from their payment app. */
-export async function submitPayment(token: string, _prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
+export async function submitPaymentProof(
+  token: string,
+  key: string,
+  utrRaw: string
+): Promise<{ error?: string; ok?: boolean }> {
   const lang = getLang();
-  const ref = String(formData.get("ref") ?? "").replace(/\s/g, "").toUpperCase();
-  if (!/^[A-Z0-9]{8,30}$/.test(ref)) return { error: errorMessage(lang, "pay.utr") };
 
   const order = await prisma.order.findUnique({ where: { trackingToken: token } });
   if (!order) return { error: errorMessage(lang, "order.notfound") };
-  if (order.status !== "PENDING_PAYMENT") return {};
+  if (order.status !== "PENDING_PAYMENT") return { ok: true };
+
+  // GUARD RAIL: the order cannot move on without a payment screenshot, and the file must
+  // really be in our bucket. A made-up key or a missing upload is rejected here, whatever the page does.
+  const validKey = /^artwork\/\d{4}-\d{2}\/[0-9a-f-]{36}\.(png|jpg|webp)$/.test(key);
+  if (!validKey || !(await privateObjectExists(key))) return { error: errorMessage(lang, "pay.proof") };
+
+  // The transaction ID is optional, but if it's given it must look right.
+  const ref = utrRaw.replace(/\s/g, "").toUpperCase();
+  if (ref && !/^[A-Z0-9]{8,30}$/.test(ref)) return { error: errorMessage(lang, "pay.utr") };
 
   await prisma.$transaction([
-    prisma.order.update({ where: { id: order.id }, data: { paymentRef: ref } }),
+    prisma.order.update({ where: { id: order.id }, data: { paymentProofKey: key, paymentRef: ref || null } }),
     prisma.orderEvent.create({
-      data: { orderId: order.id, status: "PENDING_PAYMENT", note: `Customer reported payment, UTR ${ref}` },
+      data: { orderId: order.id, status: "PENDING_PAYMENT", note: "Payment screenshot uploaded" },
     }),
+    ...(ref
+      ? [
+          prisma.orderEvent.create({
+            data: { orderId: order.id, status: "PENDING_PAYMENT", note: `Customer reported payment, UTR ${ref}` },
+          }),
+        ]
+      : []),
   ]);
   revalidatePath(`/order/${token}`);
-  redirect(`/order/${token}`);
+  return { ok: true };
 }

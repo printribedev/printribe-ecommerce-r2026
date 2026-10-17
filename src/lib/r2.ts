@@ -1,4 +1,4 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -52,6 +52,16 @@ export function presignDownload(key: string, expiresIn = 3600) {
     new GetObjectCommand({ Bucket: BUCKETS.private(), Key: key }),
     { expiresIn }
   );
+}
+
+/** True only if a file really exists in the private bucket under this key. */
+export async function privateObjectExists(key: string): Promise<boolean> {
+  try {
+    const head = await r2().send(new HeadObjectCommand({ Bucket: BUCKETS.private(), Key: key }));
+    return (head.ContentLength ?? 0) > 0;
+  } catch {
+    return false;
+  }
 }
 
 export function publicUrl(key: string) {

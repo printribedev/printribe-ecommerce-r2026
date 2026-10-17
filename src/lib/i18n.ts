@@ -84,6 +84,7 @@ const en = {
     "pincode.notfound": "We couldn't find pincode {pin}. Please check it.",
     "pincode.mismatch": "Pincode {pin} belongs to {apiState}, but you chose {state}. Please check both.",
     "pay.utr": "Enter the UPI transaction ID from your payment app (usually 12 digits).",
+    "pay.proof": "Please upload your payment screenshot to continue.",
     "order.notfound": "Order not found.",
   },
 
@@ -106,6 +107,15 @@ const en = {
     optionShot: "Upload screenshot",
     shotHelp: "Upload a clear screenshot of the payment success screen, showing the amount and transaction ID.",
     shotUnavailable: "Screenshot upload isn't available yet. Please enter your transaction ID instead.",
+    proofTitle: "Upload your payment screenshot",
+    proofRequired: "A screenshot is required to confirm your order.",
+    chooseFile: "Choose screenshot",
+    changeFile: "Change",
+    utrOptional: "UPI transaction ID (optional)",
+    needFile: "Choose your screenshot first.",
+    uploading: "Uploading…",
+    uploadFailed: "Upload failed. Please check your connection and try again.",
+    proofUnavailable: "Payment confirmation is temporarily unavailable. Please contact us to complete your order.",
   },
 
   done: {
@@ -220,6 +230,7 @@ const kn: Dict = {
     "pincode.notfound": "ಪಿನ್‌ಕೋಡ್ {pin} ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ.",
     "pincode.mismatch": "ಪಿನ್‌ಕೋಡ್ {pin} {apiState} ರಾಜ್ಯಕ್ಕೆ ಸೇರಿದೆ, ಆದರೆ ನೀವು {state} ಆರಿಸಿದ್ದೀರಿ. ದಯವಿಟ್ಟು ಎರಡನ್ನೂ ಪರಿಶೀಲಿಸಿ.",
     "pay.utr": "ನಿಮ್ಮ ಪಾವತಿ ಆ್ಯಪ್‌ನಲ್ಲಿರುವ UPI ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ನಮೂದಿಸಿ (ಸಾಮಾನ್ಯವಾಗಿ 12 ಅಂಕಿ).",
+    "pay.proof": "ಮುಂದುವರಿಸಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪಾವತಿ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
     "order.notfound": "ಆರ್ಡರ್ ಕಂಡುಬಂದಿಲ್ಲ.",
   },
 
@@ -242,6 +253,15 @@ const kn: Dict = {
     optionShot: "ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್",
     shotHelp: "ಮೊತ್ತ ಮತ್ತು ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ಕಾಣುವಂತೆ ಪಾವತಿ ಯಶಸ್ವಿ ಪರದೆಯ ಸ್ಪಷ್ಟ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
     shotUnavailable: "ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಬದಲಿಗೆ ನಿಮ್ಮ ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ನಮೂದಿಸಿ.",
+    proofTitle: "ನಿಮ್ಮ ಪಾವತಿ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+    proofRequired: "ನಿಮ್ಮ ಆರ್ಡರ್ ದೃಢೀಕರಿಸಲು ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಕಡ್ಡಾಯ.",
+    chooseFile: "ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಆಯ್ಕೆಮಾಡಿ",
+    changeFile: "ಬದಲಿಸಿ",
+    utrOptional: "UPI ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID (ಐಚ್ಛಿಕ)",
+    needFile: "ಮೊದಲು ನಿಮ್ಮ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಆಯ್ಕೆಮಾಡಿ.",
+    uploading: "ಅಪ್‌ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+    uploadFailed: "ಅಪ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    proofUnavailable: "ಪಾವತಿ ದೃಢೀಕರಣ ತಾತ್ಕಾಲಿಕವಾಗಿ ಲಭ್ಯವಿಲ್ಲ. ನಿಮ್ಮ ಆರ್ಡರ್ ಪೂರ್ಣಗೊಳಿಸಲು ದಯವಿಟ್ಟು ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ.",
   },
 
   done: {

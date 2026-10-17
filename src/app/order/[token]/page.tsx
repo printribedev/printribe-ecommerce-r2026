@@ -5,10 +5,9 @@ import { getLang } from "@/lib/lang";
 import { formatINR } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { QUICK_PRODUCT as P, colourLabel, productText } from "@/lib/quick-product";
-import { attachProof } from "../actions";
 import { OrderHeader } from "../OrderHeader";
 import { Stepper } from "../Stepper";
-import { PaymentOptions } from "./PaymentOptions";
+import { PaymentProof } from "./PaymentProof";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Printribe", robots: { index: false } };
@@ -28,7 +27,8 @@ export default async function OrderStatusPage({ params }: { params: { token: str
   const locale = lang === "kn" ? "kn-IN" : "en-IN";
 
   const awaiting = order.status === "PENDING_PAYMENT";
-  const submitted = Boolean(order.paymentRef || order.paymentProofKey);
+  // GUARD RAIL: the order only moves past the payment step once a screenshot has been uploaded.
+  const submitted = Boolean(order.paymentProofKey);
   const stage = awaiting && !submitted ? 3 : 4;
   const whatsappHref = P.whatsapp
     ? `https://wa.me/${P.whatsapp}?text=${encodeURIComponent(
@@ -53,11 +53,11 @@ export default async function OrderStatusPage({ params }: { params: { token: str
 
           <div className="mt-6 border-t pt-5">
             <h2 className="mb-3 text-left text-base font-semibold">{t.pay.afterPaid}</h2>
-            <PaymentOptions
+            <PaymentProof
               token={order.trackingToken}
               lang={lang}
               uploadsEnabled={uploadsEnabled()}
-              onScreenshot={attachProof.bind(null, order.trackingToken)}
+              whatsappHref={whatsappHref}
             />
           </div>
         </section>
