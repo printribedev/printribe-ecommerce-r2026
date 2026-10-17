@@ -5,6 +5,7 @@ import { useState } from "react";
 import { formatINR } from "@/lib/money";
 import { shippingFee, unitPrice } from "@/lib/pricing";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { SizeChart } from "./SizeChart";
 
 /** Simple tee silhouette tinted with the chosen colour, used until a real product photo is set. */
 function TeeVisual({ hex }: { hex: string }) {
@@ -87,6 +88,7 @@ export function ProductPicker() {
             </button>
           ))}
         </div>
+        <SizeChart selected={size} />
       </div>
 
       <div>
