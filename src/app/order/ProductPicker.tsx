@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatINR } from "@/lib/money";
-import { unitPrice } from "@/lib/pricing";
+import { shippingFee, unitPrice } from "@/lib/pricing";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
 
 /** Simple tee silhouette tinted with the chosen colour, used until a real product photo is set. */
@@ -27,6 +27,8 @@ export function ProductPicker() {
   const [qty, setQty] = useState(P.moq);
 
   const unit = unitPrice({ basePrice: P.price, tiers: P.tiers, qty });
+  const subtotal = unit * qty;
+  const shipping = shippingFee(subtotal, P.shipping);
   const hex = P.colours.find((c) => c.name === colour)?.hex ?? "#fff";
   const next = `/order/details?${new URLSearchParams({ size, colour, qty: String(qty) })}`;
 
@@ -110,11 +112,26 @@ export function ProductPicker() {
       </div>
 
       <div className="sticky bottom-0 -mx-4 border-t border-neutral-200 bg-paper/95 px-4 py-4 backdrop-blur">
-        <div className="mb-3 flex items-baseline justify-between">
-          <span className="text-sm text-neutral-600">
-            {qty} × {formatINR(unit)}
-          </span>
-          <span className="text-xl font-bold">{formatINR(unit * qty)}</span>
+        <div className="mb-3 space-y-1 text-sm text-neutral-600">
+          <div className="flex justify-between">
+            <span>
+              {qty} × {formatINR(unit)}
+            </span>
+            <span>{formatINR(subtotal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Delivery</span>
+            <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>
+          </div>
+          <div className="flex items-baseline justify-between pt-1 text-foreground">
+            <span className="font-medium">Total</span>
+            <span className="text-xl font-bold">{formatINR(subtotal + shipping)}</span>
+          </div>
+          {shipping > 0 && (
+            <p className="text-xs text-tribe-dark">
+              Add {formatINR(P.shipping.freeAbove - subtotal)} more for free delivery
+            </p>
+          )}
         </div>
         {size ? (
           <Link

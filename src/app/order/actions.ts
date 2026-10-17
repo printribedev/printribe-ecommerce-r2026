@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getProfile } from "@/lib/auth";
 import { INDIAN_STATES } from "@/lib/india";
-import { unitPrice } from "@/lib/pricing";
+import { shippingFee, unitPrice } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
 
@@ -42,7 +42,9 @@ export async function placeOrder(_prev: OrderFormState, formData: FormData): Pro
 
   // The price is always recomputed here; the browser's number is never used.
   const unit = unitPrice({ basePrice: P.price, tiers: P.tiers, qty: d.qty });
-  const total = unit * d.qty;
+  const subtotal = unit * d.qty;
+  const shipping = shippingFee(subtotal, P.shipping);
+  const total = subtotal + shipping;
 
   const profile = await getProfile(); // null for guests
   const order = await prisma.order.create({
@@ -60,7 +62,8 @@ export async function placeOrder(_prev: OrderFormState, formData: FormData): Pro
         state: d.state,
         pincode: d.pincode,
       },
-      subtotal: total,
+      subtotal,
+      shipping,
       total,
       items: {
         create: {
@@ -72,7 +75,7 @@ export async function placeOrder(_prev: OrderFormState, formData: FormData): Pro
           gstRate: P.gstRate,
           unitPrice: unit,
           qty: d.qty,
-          lineTotal: total,
+          lineTotal: subtotal,
         },
       },
       events: { create: { status: "PENDING_PAYMENT", note: "Order placed, awaiting UPI payment" } },

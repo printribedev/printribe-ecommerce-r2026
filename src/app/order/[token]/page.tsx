@@ -123,7 +123,11 @@ export default async function OrderStatusPage({ params }: { params: { token: str
             </li>
           ))}
         </ul>
-        <p className="mt-4 flex justify-between border-t pt-3 font-semibold">
+        <p className="mt-4 flex justify-between border-t pt-3 text-sm text-neutral-600">
+          <span>Delivery</span>
+          <span>{order.shipping === 0 ? "Free" : formatINR(order.shipping)}</span>
+        </p>
+        <p className="mt-1 flex justify-between font-semibold">
           <span>Total</span>
           <span>{formatINR(order.total)}</span>
         </p>

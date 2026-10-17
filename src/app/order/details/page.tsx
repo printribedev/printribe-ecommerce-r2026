@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatINR } from "@/lib/money";
-import { unitPrice } from "@/lib/pricing";
+import { shippingFee, unitPrice } from "@/lib/pricing";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
 import { DetailsForm } from "../DetailsForm";
 import { parseSelection } from "../selection";
@@ -19,7 +19,9 @@ export default function DetailsPage({
   if (!selection) redirect("/");
 
   const unit = unitPrice({ basePrice: P.price, tiers: P.tiers, qty: selection.qty });
-  const total = formatINR(unit * selection.qty);
+  const subtotal = unit * selection.qty;
+  const shipping = shippingFee(subtotal, P.shipping);
+  const total = formatINR(subtotal + shipping);
   const hex = P.colours.find((c) => c.name === selection.colour)?.hex ?? "#fff";
 
   return (
@@ -39,7 +41,12 @@ export default function DetailsPage({
             Change
           </Link>
         </div>
-        <p className="font-semibold">{total}</p>
+        <div className="text-right text-sm">
+          <p className="font-semibold">{formatINR(subtotal)}</p>
+          <p className="text-xs text-neutral-500">
+            + {shipping === 0 ? "free delivery" : `${formatINR(shipping)} delivery`}
+          </p>
+        </div>
       </section>
 
       <h1 className="mb-3 text-xl font-bold">Delivery details</h1>

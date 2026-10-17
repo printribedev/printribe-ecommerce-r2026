@@ -31,6 +31,8 @@ export const QUICK_PRODUCT = {
     { minQty: 10, discount: 10000 },
     { minQty: 20, discount: 13000 },
   ] as Tier[],
+  /** Delivery: flat fee, waived once the items total reaches freeAbove (paise) */
+  shipping: { fee: 7500, freeAbove: 100000 },
   /** Optional photo under /public, e.g. "/products/tee.jpg" */
   image: null as string | null,
   /**

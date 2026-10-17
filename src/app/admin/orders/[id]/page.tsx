@@ -88,6 +88,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             </li>
           ))}
         </ul>
+        <p className="mt-3 flex justify-between border-t pt-3 text-sm text-neutral-600">
+          <span>Delivery</span>
+          <span>{order.shipping === 0 ? "Free" : formatINR(order.shipping)}</span>
+        </p>
+        <p className="mt-1 flex justify-between text-sm font-semibold">
+          <span>Total</span>
+          <span>{formatINR(order.total)}</span>
+        </p>
       </Card>
 
       <Card title="Customer & delivery">

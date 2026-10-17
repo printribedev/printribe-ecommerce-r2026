@@ -23,6 +23,11 @@ export function unitPrice(opts: {
   return Math.max(0, raw);
 }
 
+/** Flat delivery fee, free once the items total reaches `freeAbove`. All values in paise. */
+export function shippingFee(subtotal: number, rule: { fee: number; freeAbove: number }): number {
+  return subtotal >= rule.freeAbove ? 0 : rule.fee;
+}
+
 export function lineTotal(opts: {
   basePrice: number;
   priceDelta?: number;
