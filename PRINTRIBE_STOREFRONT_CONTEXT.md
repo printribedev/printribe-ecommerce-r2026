@@ -2,7 +2,15 @@
 
 Public ecommerce site for Printribe (custom print & apparel, India). Printful-style: browse, upload artwork, customise on a 2D mockup, pay, track. Separate project from the internal CRM at `U:\printribe-crm\` (Next.js + Supabase + Prisma, hosted on Vercel).
 
-**Status:** planning complete, no code yet. Project folder: `U:\printribe-ecommerce\`.
+**Status (2026-10-17):** Phase 1 (foundation) code written; `npm run build` passes. Not yet connected to a real Supabase/R2 project — fill `.env.local` from `.env.example`, then `npx prisma db push`. Project folder: `U:\printribe-ecommerce\`.
+
+**Phase 1 delivered:** Next 14 + Tailwind 3 (Tribe Red tokens, Inter), Prisma 6 schema (`prisma/schema.prisma`, all money in paise), Supabase auth (email link + Google, `/login`, `/auth/callback`), middleware guarding `/admin` and `/account`, roles in `Profile` (CUSTOMER / STAFF with `permissions[]` / ADMIN; first admins via `ADMIN_EMAILS`), `src/lib/auth.ts` guards, R2 helpers + `/api/uploads/presign` (catalogue = staff only → public bucket; artwork = anyone → private bucket, type/size checked). Defaults chosen: team-ready admin roles, per-state `ShippingRate`, checkout preview is final approval.
+
+**Phase 2 delivered (build passes, NOT yet run against a real DB/R2):** `/admin` shell with permission-filtered nav; `/admin/categories` (CRUD, parent, image, sort, visibility); `/admin/products` list/new/edit with details+pricing (base price, GST, HSN, MOQ), bulk-price tiers, print areas (mm size + fee), size×colour variant generator with per-variant price change/stock, product photos, and a drag-the-rectangle mockup editor (per colour × print area, rect stored as 0–1 fractions, locked to real print aspect). Server actions in `src/app/admin/*/actions.ts` call `requireAdmin(section)` and `revalidateTag("catalogue")`. Price maths in `src/lib/pricing.ts`. Schema change: `Mockup` is now per colour (`productId + colorName + printAreaId`), not per variant. **R2 public bucket needs CORS allowing PUT from the site origin for uploads to work.**
+
+**Quick order page (stop-gap, built after phase 2):** `/order` is ONE hard-coded product (`src/lib/quick-product.ts` — edit price/sizes/colours there). Customer picks colour/size/qty (live price, recomputed server-side), enters delivery details → creates an `Order` (PENDING_PAYMENT, guest or signed-in) → `/order/[token]` shows the UPI QR (`public/upi-qr.png`, copied from the CRM) and a payment-screenshot upload (private R2 bucket, `Order.paymentProofKey`). Staff verify in `/admin/orders` (screenshot via signed URL) → "Confirm payment received" → move through stages by hand. Prices are GST-inclusive; tax split is not stored yet. Replaced later by `/products/[slug]` + Razorpay; manual UPI flow can stay as a fallback. **Private R2 bucket also needs a CORS rule (PUT from the site origin) for customer uploads.**
+
+**Known gaps to close later:** rate-limit the artwork presign route (guests can call it); SVG artwork must never be inlined in the DOM; Google OAuth needs enabling in Supabase.
 
 ## Stack
 Next.js 14+ (App Router, TS), Supabase (Auth + Postgres), Prisma, Tailwind, Razorpay, Resend (`noreply@printribe.in`), Cloudflare R2, Vercel. Konva (`react-konva`) for the customiser. Domain: TBD (Resend can't send from printribe.in until DNS is verified — use Resend test sender in dev).

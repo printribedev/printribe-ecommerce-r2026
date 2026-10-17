@@ -1,0 +1,464 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// All money is stored as integer paise (₹1 = 100). Never floats.
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  STAFF // limited admin access, see Profile.permissions
+  ADMIN // full access
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  IN_DESIGN
+  IN_PRODUCTION
+  QC
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  CREATED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum OutboxStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum DiscountType {
+  PERCENT
+  FLAT
+}
+
+enum ContentBlockType {
+  HERO
+  BANNER
+  PRODUCT_GRID
+  CATEGORY_GRID
+  RICH_TEXT
+  USP_STRIP
+}
+
+// ───────── Users ─────────
+
+/// One row per Supabase auth user. `id` equals auth.users.id.
+model Profile {
+  id          String   @id @db.Uuid
+  email       String   @unique
+  name        String?
+  phone       String?
+  role        Role     @default(CUSTOMER)
+  /// For STAFF: which admin sections they may use, e.g. ["products","orders"]
+  permissions String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  addresses Address[]
+  designs   Design[]
+  orders    Order[]
+  carts     Cart[]
+
+  @@map("profiles")
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  profileId String   @map("profile_id") @db.Uuid
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  label     String?
+  name      String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("addresses")
+}
+
+// ───────── Catalogue (all editable in /admin) ─────────
+
+model Category {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  description String?
+  imageKey    String?    @map("image_key")
+  parentId    String?    @map("parent_id")
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  sortOrder   Int        @default(0) @map("sort_order")
+  active      Boolean    @default(true)
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  categoryId  String   @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+  // Pricing — set per product in admin
+  basePrice   Int      @map("base_price") // paise, per unit
+  gstRate     Decimal  @default(5) @map("gst_rate") @db.Decimal(5, 2) // percent
+  hsn         String?
+  moq         Int      @default(1)
+  // Optional Printful-style extras
+  fabric      String?
+  gsm         String?
+  sizeChartId String?  @map("size_chart_id")
+  sizeChart   SizeChart? @relation(fields: [sizeChartId], references: [id])
+  /// Product can be customised in the design maker
+  customisable Boolean @default(true)
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  seoTitle    String?  @map("seo_title")
+  seoDesc     String?  @map("seo_desc")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  variants   ProductVariant[]
+  printAreas PrintArea[]
+  priceTiers PriceTier[]
+  images     ProductImage[]
+  mockups    Mockup[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id         String  @id @default(cuid())
+  productId  String  @map("product_id")
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku        String  @unique
+  size       String?
+  colorName  String? @map("color_name")
+  colorHex   String? @map("color_hex")
+  /// Added to Product.basePrice (paise, may be negative)
+  priceDelta Int     @default(0) @map("price_delta")
+  inStock    Boolean @default(true) @map("in_stock")
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  r2Key     String  @map("r2_key")
+  alt       String?
+  sortOrder Int     @default(0) @map("sort_order")
+
+  @@map("product_images")
+}
+
+/// Quantity discount: unit price drops once qty >= minQty.
+model PriceTier {
+  id        String  @id @default(cuid())
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty    Int     @map("min_qty")
+  /// paise subtracted from the unit price at this tier
+  discount  Int
+
+  @@unique([productId, minQty])
+  @@map("price_tiers")
+}
+
+/// A placement on the product (front, back, sleeve…) where artwork can go.
+model PrintArea {
+  id        String  @id @default(cuid())
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  key       String // "front", "back", "left_sleeve"
+  label     String
+  /// Real-world print size in mm, used for DPI checks
+  widthMm   Int     @map("width_mm")
+  heightMm  Int     @map("height_mm")
+  /// Extra fee (paise) if artwork is placed here. First placement can be 0.
+  fee       Int     @default(0)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  mockups Mockup[]
+
+  @@unique([productId, key])
+  @@map("print_areas")
+}
+
+/// Mockup photo for one colour variant + placement, with the print rectangle
+/// expressed as fractions (0–1) of the image so it scales to any screen.
+model Mockup {
+  id          String    @id @default(cuid())
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// One mockup per colour (all sizes of a colour share it)
+  colorName   String    @map("color_name")
+  printAreaId String    @map("print_area_id")
+  printArea   PrintArea @relation(fields: [printAreaId], references: [id], onDelete: Cascade)
+  r2Key       String    @map("r2_key")
+  rectX       Float     @map("rect_x")
+  rectY       Float     @map("rect_y")
+  rectW       Float     @map("rect_w")
+  rectH       Float     @map("rect_h")
+
+  @@unique([productId, colorName, printAreaId])
+  @@map("mockups")
+}
+
+model SizeChart {
+  id       String    @id @default(cuid())
+  name     String
+  /// { columns: string[], rows: string[][] }
+  data     Json
+  products Product[]
+
+  @@map("size_charts")
+}
+
+// ───────── Designs, cart, orders ─────────
+
+model Design {
+  id         String   @id @default(cuid())
+  profileId  String?  @map("profile_id") @db.Uuid
+  profile    Profile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  /// Guest owner (cookie id) until they sign in
+  sessionId  String?  @map("session_id")
+  productId  String   @map("product_id")
+  name       String?
+  /// Per placement: [{ printAreaKey, layers: [{ type, assetKey, x, y, w, h, rotation, text… }] }]
+  layers     Json
+  /// Original uploaded files (R2 keys, private bucket)
+  assetKeys  String[] @default([]) @map("asset_keys")
+  previewKey String?  @map("preview_key")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@map("designs")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  profileId String?    @map("profile_id") @db.Uuid
+  profile   Profile?   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  sessionId String?    @unique @map("session_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String  @map("cart_id")
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String  @map("variant_id")
+  designId  String? @map("design_id")
+  design    Design? @relation(fields: [designId], references: [id])
+  qty       Int
+
+  @@map("cart_items")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  /// Human number shown to customer, e.g. PTW-000123
+  number        String      @unique
+  profileId     String?     @map("profile_id") @db.Uuid
+  profile       Profile?    @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  email         String
+  phone         String
+  /// Guests track via this token in a magic link
+  trackingToken String      @unique @default(cuid()) @map("tracking_token")
+  status        OrderStatus @default(PENDING_PAYMENT)
+  shippingAddr  Json        @map("shipping_addr")
+  billingAddr   Json?       @map("billing_addr")
+  gstin         String?
+  // Money (paise)
+  subtotal      Int
+  discount      Int         @default(0)
+  shipping      Int         @default(0)
+  cgst          Int         @default(0)
+  sgst          Int         @default(0)
+  igst          Int         @default(0)
+  total         Int
+  couponCode    String?     @map("coupon_code")
+  crmOrderId    String?     @map("crm_order_id")
+  trackingUrl   String?     @map("tracking_url")
+  /// Manual UPI payment: customer's screenshot (private R2 key), checked by staff
+  paymentProofKey String?   @map("payment_proof_key")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  items    OrderItem[]
+  payments Payment[]
+  events   OrderEvent[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String  @map("order_id")
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  /// Snapshot so later catalogue edits never change past orders
+  productName String @map("product_name")
+  sku         String
+  size        String?
+  colorName   String? @map("color_name")
+  hsn         String?
+  gstRate     Decimal @map("gst_rate") @db.Decimal(5, 2)
+  unitPrice   Int     @map("unit_price")
+  qty         Int
+  lineTotal   Int     @map("line_total")
+  designId    String? @map("design_id")
+  design      Design? @relation(fields: [designId], references: [id])
+  designSnapshot Json? @map("design_snapshot")
+
+  @@map("order_items")
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String   @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("order_events")
+}
+
+model Payment {
+  id                 String        @id @default(cuid())
+  orderId            String        @map("order_id")
+  order              Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  razorpayOrderId    String        @unique @map("razorpay_order_id")
+  razorpayPaymentId  String?       @unique @map("razorpay_payment_id")
+  amount             Int
+  status             PaymentStatus @default(CREATED)
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+/// Reliable hand-off to the CRM (and emails): written in the same transaction
+/// as the payment, delivered by a retrying job.
+model OutboxEvent {
+  id        String       @id @default(cuid())
+  type      String // "crm.order.created", "email.receipt"
+  payload   Json
+  status    OutboxStatus @default(PENDING)
+  attempts  Int          @default(0)
+  lastError String?      @map("last_error")
+  nextRunAt DateTime     @default(now()) @map("next_run_at")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@index([status, nextRunAt])
+  @@map("outbox_events")
+}
+
+// ───────── Commerce settings (admin-editable) ─────────
+
+model Coupon {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  type      DiscountType
+  /// percent (1–100) or paise
+  value     Int
+  minOrder  Int          @default(0) @map("min_order")
+  maxUses   Int?         @map("max_uses")
+  usedCount Int          @default(0) @map("used_count")
+  startsAt  DateTime?    @map("starts_at")
+  endsAt    DateTime?    @map("ends_at")
+  active    Boolean      @default(true)
+
+  @@map("coupons")
+}
+
+/// Per-state shipping, edited in admin. `state = "*"` is the fallback.
+model ShippingRate {
+  id            String  @id @default(cuid())
+  state         String  @unique
+  rate          Int // paise
+  freeAbove     Int?    @map("free_above") // paise subtotal for free shipping
+  etaMinDays    Int?    @map("eta_min_days")
+  etaMaxDays    Int?    @map("eta_max_days")
+  active        Boolean @default(true)
+
+  @@map("shipping_rates")
+}
+
+// ───────── Content (nothing hard-coded) ─────────
+
+model ContentBlock {
+  id        String           @id @default(cuid())
+  /// Which page/slot: "home", "category:<slug>"
+  page      String
+  type      ContentBlockType
+  data      Json
+  sortOrder Int              @default(0) @map("sort_order")
+  active    Boolean          @default(true)
+
+  @@index([page, sortOrder])
+  @@map("content_blocks")
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  body      String // markdown
+  published Boolean  @default(true)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pages")
+}
+
+model MenuItem {
+  id        String  @id @default(cuid())
+  /// "header" | "footer"
+  menu      String
+  label     String
+  href      String
+  sortOrder Int     @default(0) @map("sort_order")
+
+  @@map("menu_items")
+}
+
+/// Key/value store: site name, logo key, contact info, email copy, etc.
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
