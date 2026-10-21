@@ -17,6 +17,11 @@ export function fmt(template: string, vars: Record<string, string | number> = {}
 const en = {
   switchTo: "ಕನ್ನಡ",
   switching: "Switching language…",
+  closed: {
+    title: "Orders are now closed",
+    body: "Thank you for being part of the Kannada Rajyotsava Polo. We're no longer taking new orders.",
+    existing: "Already placed an order? Your order link still works to check its status.",
+  },
   stepper: ["Choose", "Your details", "Pay", "Done"],
 
   product: {
@@ -86,6 +91,7 @@ const en = {
     "pay.utr": "Enter the UPI transaction ID from your payment app (usually 12 digits).",
     "pay.proof": "Please upload your payment screenshot to continue.",
     "order.notfound": "Order not found.",
+    "store.closed": "Orders are now closed. We're no longer taking new orders.",
   },
 
   pay: {
@@ -163,6 +169,11 @@ export type Dict = typeof en;
 const kn: Dict = {
   switchTo: "English",
   switching: "ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗುತ್ತಿದೆ…",
+  closed: {
+    title: "ಆರ್ಡರ್‌ಗಳನ್ನು ಈಗ ಮುಚ್ಚಲಾಗಿದೆ",
+    body: "ಕನ್ನಡ ರಾಜ್ಯೋತ್ಸವ ಪೋಲೋದ ಭಾಗವಾದ ನಿಮಗೆ ಧನ್ಯವಾದಗಳು. ನಾವು ಇನ್ನು ಹೊಸ ಆರ್ಡರ್‌ಗಳನ್ನು ಸ್ವೀಕರಿಸುತ್ತಿಲ್ಲ.",
+    existing: "ಈಗಾಗಲೇ ಆರ್ಡರ್ ಮಾಡಿದ್ದೀರಾ? ಅದರ ಸ್ಥಿತಿ ನೋಡಲು ನಿಮ್ಮ ಆರ್ಡರ್ ಲಿಂಕ್ ಈಗಲೂ ಕೆಲಸ ಮಾಡುತ್ತದೆ.",
+  },
   stepper: ["ಆಯ್ಕೆ", "ನಿಮ್ಮ ವಿವರಗಳು", "ಪಾವತಿ", "ಮುಗಿದಿದೆ"],
 
   product: {
@@ -232,6 +243,7 @@ const kn: Dict = {
     "pay.utr": "ನಿಮ್ಮ ಪಾವತಿ ಆ್ಯಪ್‌ನಲ್ಲಿರುವ UPI ಟ್ರಾನ್ಸಾಕ್ಷನ್ ID ನಮೂದಿಸಿ (ಸಾಮಾನ್ಯವಾಗಿ 12 ಅಂಕಿ).",
     "pay.proof": "ಮುಂದುವರಿಸಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪಾವತಿ ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
     "order.notfound": "ಆರ್ಡರ್ ಕಂಡುಬಂದಿಲ್ಲ.",
+    "store.closed": "ಆರ್ಡರ್‌ಗಳನ್ನು ಈಗ ಮುಚ್ಚಲಾಗಿದೆ. ನಾವು ಇನ್ನು ಹೊಸ ಆರ್ಡರ್‌ಗಳನ್ನು ಸ್ವೀಕರಿಸುತ್ತಿಲ್ಲ.",
   },
 
   pay: {

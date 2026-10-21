@@ -12,6 +12,7 @@ import { shippingFee, unitPrice } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 import { privateObjectExists } from "@/lib/r2";
 import { QUICK_PRODUCT as P } from "@/lib/quick-product";
+import { STOREFRONT_OPEN } from "@/lib/site";
 import { normalizePhone, validateDetails } from "@/lib/validation";
 import { checkEmailDomain, checkPincode } from "@/lib/verify";
 
@@ -41,6 +42,8 @@ function orderNumber() {
 
 export async function placeOrder(_prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
   const lang = getLang(); // error messages come back in the visitor's language
+  // Storefront sunset: refuse new orders even if someone posts to this action directly.
+  if (!STOREFRONT_OPEN) return { error: errorMessage(lang, "store.closed") };
   const parsed = Schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     const field = String(parsed.error.issues[0].path[0] ?? "");

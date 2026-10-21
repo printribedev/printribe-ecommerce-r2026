@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { STOREFRONT_OPEN } from "@/lib/site";
 
 /** Pages that need a signed-in user. Role checks happen in the pages (src/lib/auth.ts). */
 const PROTECTED = ["/admin", "/account"];
@@ -11,6 +12,16 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/callback";
     return NextResponse.redirect(url);
+  }
+
+  // Storefront sunset: the product page and delivery form show the "closed" page instead.
+  // Admin, login and existing order links (/order/<token>) are not touched.
+  const path = request.nextUrl.pathname;
+  if (!STOREFRONT_OPEN && (path === "/" || path === "/order" || path === "/order/details")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/closed";
+    url.search = "";
+    return NextResponse.rewrite(url);
   }
 
   let response = NextResponse.next({ request });
@@ -37,7 +48,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
   if (!user && PROTECTED.some((p) => path === p || path.startsWith(p + "/"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

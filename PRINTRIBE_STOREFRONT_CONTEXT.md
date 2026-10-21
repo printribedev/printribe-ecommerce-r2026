@@ -2,6 +2,8 @@
 
 Public ecommerce site for Printribe (custom print & apparel, India). Printful-style: browse, upload artwork, customise on a 2D mockup, pay, track. Separate project from the internal CRM at `U:\printribe-crm\` (Next.js + Supabase + Prisma, hosted on Vercel).
 
+**STOREFRONT SUNSET (2026-10-21):** public pages (/, /order, /order/details) show a bilingual "orders are closed" page via middleware, and placeOrder refuses new orders. Admin, login and existing order links (/order/<token>) stay open. One switch: `STOREFRONT_OPEN` in `src/lib/site.ts` (false = closed). To reopen, set it to true and push.
+
 **Status (2026-10-17):** Phase 1 (foundation) code written; `npm run build` passes. Not yet connected to a real Supabase/R2 project — fill `.env.local` from `.env.example`, then `npx prisma db push`. Project folder: `U:\printribe-ecommerce\`.
 
 **Hosting (2026-10-17):** GitHub `printribedev/printribe-ecommerce-r2026` (branch `main`, auto-deploys). Vercel `printribe-kannada-rajyotsava.vercel.app`. Supabase project `fjitzkwflwyflhgzrmer` (separate from CRM `awdbxuiotsifsijbkmmq`); tables created via `prisma db push`. Admin = `theprintribe@gmail.com` (via `ADMIN_EMAILS`); sign-in works, `/admin` loads. `/api/health` shows which settings the live site sees (no values) and DB reachability. `.env.local` is gitignored; Prisma doesn't read it, so load `DATABASE_URL`/`DIRECT_URL` into the shell before `prisma db push`. Use pooler URLs: `DATABASE_URL` = transaction pooler :6543 + `?pgbouncer=true`, `DIRECT_URL` = session pooler :5432. **Remaining:** Cloudflare R2 (6 env vars + CORS on both buckets), Supabase redirect URLs, add the same vars to Vercel.
